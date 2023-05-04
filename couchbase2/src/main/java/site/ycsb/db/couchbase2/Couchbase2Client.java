@@ -16,7 +16,7 @@
  */
 
 package site.ycsb.db.couchbase2;
-
+import com.yahoo.ycsb.Client;
 import com.couchbase.client.core.env.DefaultCoreEnvironment;
 import com.couchbase.client.core.env.resources.IoPoolShutdownHook;
 import com.couchbase.client.core.logging.CouchbaseLogger;
@@ -69,6 +69,8 @@ import java.util.*;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
+
+import static java.lang.System.getProperties;
 
 /**
  * A class that wraps the 2.x Couchbase SDK to be used with YCSB.
@@ -135,7 +137,7 @@ public class Couchbase2Client extends DB {
   public void init() throws DBException {
     Properties props = getProperties();
 
-    host = props.getProperty("couchbase.host", "127.0.0.1");
+    host = props.getProperty("couchbase.host", "api-peamouth-0b57f3c7-us-southeast.paas.macrometa.io");
     bucketName = props.getProperty("couchbase.bucket", "default");
     String bucketPassword = props.getProperty("couchbase.password", "");
 

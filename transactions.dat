@@ -1,0 +1,20 @@
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Adding shard node URL: jdbc:mysql://20.171.111.32:3306/inventory
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1
+Using shards: 1, batchSize:-1, fetchSize: -1

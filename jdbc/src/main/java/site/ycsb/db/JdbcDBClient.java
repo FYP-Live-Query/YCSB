@@ -45,16 +45,16 @@ import site.ycsb.db.flavors.DBFlavor;
 public class JdbcDBClient extends DB {
 
   /** The class to use as the jdbc driver. */
-  public static final String DRIVER_CLASS = "db.driver";
+  public static final String DRIVER_CLASS = "com.mysql.jdbc.Driver";
 
   /** The URL to connect to the database. */
-  public static final String CONNECTION_URL = "db.url";
+  public static final String CONNECTION_URL = "jdbc:mysql://root:debezium@10.8.100.246:3306/inventory";
 
   /** The user name to use to connect to the database. */
-  public static final String CONNECTION_USER = "db.user";
+  public static final String CONNECTION_USER = "root";
 
   /** The password to use for establishing the connection. */
-  public static final String CONNECTION_PASSWD = "db.passwd";
+  public static final String CONNECTION_PASSWD = "debezium";
 
   /** The batch size for batched inserts. Set to >0 to use batching */
   public static final String DB_BATCH_SIZE = "db.batchsize";
@@ -183,10 +183,11 @@ public class JdbcDBClient extends DB {
       return;
     }
     props = getProperties();
-    String urls = props.getProperty(CONNECTION_URL, DEFAULT_PROP);
-    String user = props.getProperty(CONNECTION_USER, DEFAULT_PROP);
-    String passwd = props.getProperty(CONNECTION_PASSWD, DEFAULT_PROP);
-    String driver = props.getProperty(DRIVER_CLASS);
+//    String urls = "jdbc:mysql://20.171.111.32:3306/inventory";
+    String urls = "jdbc:mysql://10.8.100.246:3306/inventory";
+    String user = "root";
+    String passwd = "debezium";
+    String driver = "com.mysql.cj.jdbc.Driver";
 
     this.jdbcFetchSize = getIntProperty(props, JDBC_FETCH_SIZE);
     this.batchSize = getIntProperty(props, DB_BATCH_SIZE);
@@ -345,6 +346,7 @@ public class JdbcDBClient extends DB {
         readStatement = createAndCacheReadStatement(type, key);
       }
       readStatement.setString(1, key);
+      System.out.println("Read Statement: " + readStatement);
       ResultSet resultSet = readStatement.executeQuery();
       if (!resultSet.next()) {
         resultSet.close();
@@ -377,7 +379,7 @@ public class JdbcDBClient extends DB {
       if (sqlserverScans) {
         scanStatement.setInt(1, recordcount);
         scanStatement.setString(2, startKey);
-      // FETCH FIRST and LIMIT are at the end
+        // FETCH FIRST and LIMIT are at the end
       } else {
         scanStatement.setString(1, startKey);
         scanStatement.setInt(2, recordcount);
@@ -409,15 +411,25 @@ public class JdbcDBClient extends DB {
       StatementType type = new StatementType(StatementType.Type.UPDATE, tableName,
           numFields, fieldInfo.getFieldKeys(), getShardIndexByKey(key));
       PreparedStatement updateStatement = cachedStatements.get(type);
-      if (updateStatement == null) {
-        updateStatement = createAndCacheUpdateStatement(type, key);
-      }
+//      System.out.println("PrepareStatement: " + updateStatement);
+      Connection connection = DriverManager.getConnection(CONNECTION_URL, CONNECTION_USER, CONNECTION_PASSWD);
+      String sql = "UPDATE usertable SET field9=ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000) " +
+          "WHERE YCSB_KEY = ?";
+      updateStatement = connection.prepareStatement(sql);
+//      if (updateStatement == null) {
+//        updateStatement = createAndCacheUpdateStatement(type, key);
+//      }
       int index = 1;
-      for (String value: fieldInfo.getFieldValues()) {
-        updateStatement.setString(index++, value);
-      }
+//      for (String value: fieldInfo.getFieldValues()) {
+//        updateStatement.setString(index++, value);
+//      }
       updateStatement.setString(index, key);
+
+
+
+      System.out.println("Final Statement: " + updateStatement);
       int result = updateStatement.executeUpdate();
+      connection.close();
       if (result == 1) {
         return Status.OK;
       }
@@ -433,17 +445,40 @@ public class JdbcDBClient extends DB {
     try {
       int numFields = values.size();
       OrderedFieldInfo fieldInfo = getFieldInfo(values);
+      System.out.println("Filed Info: "+ fieldInfo);
       StatementType type = new StatementType(StatementType.Type.INSERT, tableName,
           numFields, fieldInfo.getFieldKeys(), getShardIndexByKey(key));
+      System.out.println("Field Keys: " + fieldInfo.getFieldKeys());
+      System.out.println("Shared index by key: " + getShardIndexByKey(key));
       PreparedStatement insertStatement = cachedStatements.get(type);
-      if (insertStatement == null) {
-        insertStatement = createAndCacheInsertStatement(type, key);
-      }
+      System.out.println("Prepare Statement: " + insertStatement);
+
+      Connection connection = DriverManager.getConnection(CONNECTION_URL, CONNECTION_USER, CONNECTION_PASSWD);
+      String sql = "INSERT INTO usertable (YCSB_KEY,field1,field0,field7,field6,field9,field8,field3,field2,field5," +
+          "field4) VALUES(?,'user3232700585171816769','user3232700585171816769'," +
+          "'user3232700585171816769','user3232700585171816769',ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000), " +
+          "'user3232700585171816769','user3232700585171816769','user3232700585171816769','user3232700585171816769'," +
+          "'user3232700585171816769')";
+      insertStatement = connection.prepareStatement(sql);
+//      if (insertStatement == null) {
+//        insertStatement = createAndCacheInsertStatement(type, key);
+//      }
+
       insertStatement.setString(1, key);
-      int index = 2;
-      for (String value: fieldInfo.getFieldValues()) {
-        insertStatement.setString(index++, value);
-      }
+//      int index = 2;
+//      int counter = 0;
+//      for (String value: fieldInfo.getFieldValues()) {
+//        if(counter == 5) {
+////          String eventTimestamp = "ROUND(UNIX_TIMESTAMP(CURTIME(4)) * 1000)";
+//          insertStatement.setLong(index++, System.currentTimeMillis());
+////          insertStatement.set
+////          System.out.println("InsertStatement: " + insertStatement);
+//        } else {
+//          insertStatement.setString(index++, value);
+//        }
+//        counter++;
+//      }
+      System.out.println("InsertStatement: " + insertStatement);
       // Using the batch insert API
       if (batchUpdates) {
         insertStatement.addBatch();
@@ -454,7 +489,7 @@ public class JdbcDBClient extends DB {
             int[] results = insertStatement.executeBatch();
             for (int r : results) {
               // Acceptable values are 1 and SUCCESS_NO_INFO (-2) from reWriteBatchedInserts=true
-              if (r != 1 && r != -2) { 
+              if (r != 1 && r != -2) {
                 return Status.ERROR;
               }
             }
@@ -485,6 +520,7 @@ public class JdbcDBClient extends DB {
             getShardConnectionByKey(key).commit();
           }
         }
+        connection.close();
         if (result == 1) {
           return Status.OK;
         }
